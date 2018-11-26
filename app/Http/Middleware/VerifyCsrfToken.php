@@ -12,6 +12,7 @@ class VerifyCsrfToken extends BaseVerifier
      * @var array
      */
     protected $except = [
-        "payment/*"
+        "payment/*",
+        'payment-eghl/redirect/*', 'payment-eghl/callback/*', // 回调和跳转，不需要检查
     ];
 }

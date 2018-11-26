@@ -64,6 +64,7 @@ return [
     'error'                           => '错误',
     'online_pay'                      => '在线支付',
     'pay'                             => '支付',
+    'pay_way'                         => '支付方式',
 
     // 用户资料
     'submit'                          => '提 交',

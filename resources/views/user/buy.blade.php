@@ -74,13 +74,25 @@
                 </div>
             @endif
             <div class="row">
+                <!-- 增加其他的支付通道 -->
+                <div class="form-group col-xs-12" style="text-align: right;">
+                    <label class="col-xs-10" for="pay_way">{{trans('home.pay_way')}}</label>
+                    <div class="col-xs-2">
+                        <select class="form-control" name="pay_way" id="pay_way">
+                            <option value="0" selected ="selected">请选择</option>
+                            <option value="1">余额支付</option>
+                            <option value="2">有赞（二维码支付）</option>
+                            <option value="3">eGHL</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
                 <div class="col-xs-12" style="text-align: right;">
-                    @if($is_youzan)
-                        <a class="btn btn-lg red hidden-print" onclick="onlinePay()"> {{trans('home.online_pay')}} </a>
+                    <a class="btn btn-lg red hidden-print" onclick="onlinePay()"> {{trans('home.online_pay')}} </a>
+                    @if($goods->type <= 2)
+                    <a class="btn btn-lg blue hidden-print uppercase" onclick="pay()"> {{trans('home.service_pay_button')}} </a>
                     @endif
-                  	@if($goods->type <= 2)
-                        <a class="btn btn-lg blue hidden-print uppercase" onclick="pay()"> {{trans('home.service_pay_button')}} </a>
-                  	@endif
                 </div>
             </div>
         </div>
@@ -140,6 +152,7 @@
         function onlinePay() {
             var goods_id = '{{$goods->id}}';
             var coupon_sn = $('#coupon_sn').val();
+            var pay_way = $('#pay_way').val();
 
             index = layer.load(1, {
                 shade: [0.7,'#CCC']
@@ -149,7 +162,7 @@
                 type: "POST",
                 url: "{{url('payment/create')}}",
                 async: false,
-                data: {_token:'{{csrf_token()}}', goods_id:goods_id, coupon_sn:coupon_sn},
+                data: {_token:'{{csrf_token()}}', goods_id:goods_id, coupon_sn:coupon_sn, pay_way: pay_way},
                 dataType: 'json',
                 beforeSend: function () {
                     index = layer.load(1, {

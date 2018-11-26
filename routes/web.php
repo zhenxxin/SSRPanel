@@ -131,4 +131,9 @@ Route::group(['middleware' => ['isForbidden', 'isLogin']], function () {
     Route::get('payment/getStatus', 'PaymentController@getStatus'); // 获取支付单状态
     Route::get('payment/{sn}', 'PaymentController@detail'); // 支付单详情
 
+    // 处于安全考虑，创建订单后，再请求一次后端，标记 payment 状态，然后跳转
+    Route::post('payment-eghl/create/{sn}', 'PaymentEGHLController@create');
+    // 对方系统可能会用 GET 和 POST 回来
+    Route::any('payment-eghl/redirect/{sn}', 'PaymentEGHLController@redirect');
+    Route::any('payment-eghl/callback/{sn}', 'PaymentEGHLController@callback');
 });

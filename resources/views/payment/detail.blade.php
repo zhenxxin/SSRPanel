@@ -8,7 +8,12 @@
         <div class="portlet light bordered">
             <div class="portlet-body">
                 <div class="alert alert-info" style="text-align: center;">
+                    @if (1 == $payment->pay_way)
+                    @elseif (2 == $payment->pay_way)
                     请使用<strong style="color:red;">支付宝、QQ、微信</strong>扫描如下二维码
+                    @elseif (3 == $payment->pay_way)
+                    请准备好您的信用卡信息，并输入<strong style="color: red;">姓名，手机号码，邮箱</strong>，然后点击支付按钮将跳转到 <strong>GHL ePayment</strong> 进行支付';
+                    @endif
                 </div>
                 <div class="row" style="text-align: center; font-size: 1.05em;">
                     <div class="col-md-12">
@@ -26,6 +31,8 @@
                                     <td align="right">有效期：</td>
                                     <td align="left">{{$payment->order->goods->days}} 天</td>
                                 </tr>
+                                @if (1 == $payment->pay_way)
+                                @elseif (2 == $payment->pay_way)
                                 <tr>
                                     <td colspan="2">
                                         扫描下方二维码进行付款（可截图再扫描）
@@ -40,6 +47,22 @@
                                         <img src="{{$payment->qr_local_url}}"/>
                                     </td>
                                 </tr>
+                                @elseif (3 == $payment->pay_way)
+                                <tr>
+                                    <td colspan="2">
+                                        <form action="/payment-eghl/create/{{ $payment->sn }}" method="post">
+                                            <label for="cust_name">姓名</label>
+                                            <input type="text" name="cust_name" />
+                                            <label for="cust_phone">手机号码</label>
+                                            <input type="text" name="cust_phone" />
+                                            <label for="cust_email">邮箱</label>
+                                            <input type="email" name="cust_email" />
+                                            <input type="hidden" name="_token" value="{{csrf_token()}}" />
+                                            <button class="btn btn-large blue hidden-print uppercase" type="submit">立即支付</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                @endif
                             </table>
                         </div>
                     </div>

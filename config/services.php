@@ -35,4 +35,11 @@ return [
         'secret' => env('STRIPE_SECRET'),
     ],
 
+    'payment' => [
+        'eghl' => [
+            'host' => env('EGHL_HOST'),
+            'merchant_id' => env('EGHL_MERCHANT_ID'),
+            'merchant_password' => env('EGHL_MERCHANT_PASSWORD'),
+        ],
+    ],
 ];

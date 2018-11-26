@@ -9,9 +9,13 @@ use App\Http\Models\Goods;
 use App\Http\Models\Order;
 use App\Http\Models\Payment;
 use App\Http\Models\PaymentCallback;
+use Exception;
+use UnexpectedValueException;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 use Response;
 use Redirect;
+use Session;
 use Log;
 use DB;
 use Auth;
@@ -37,15 +41,11 @@ class PaymentController extends Controller
     {
         $goods_id = intval($request->get('goods_id'));
         $coupon_sn = $request->get('coupon_sn');
+        $pay_way = $request->get('pay_way');
 
         $goods = Goods::query()->where('is_del', 0)->where('status', 1)->where('id', $goods_id)->first();
         if (!$goods) {
             return Response::json(['status' => 'fail', 'data' => '', 'message' => '创建支付单失败：商品或服务已下架']);
-        }
-
-        // 判断是否开启有赞云支付
-        if (!self::$systemConfig['is_youzan']) {
-            return Response::json(['status' => 'fail', 'data' => '', 'message' => '创建支付单失败：系统并未开启在线支付功能']);
         }
 
         // 判断是否存在同个商品的未支付订单
@@ -120,36 +120,24 @@ class PaymentController extends Controller
             $order = new Order();
             $order->order_sn = $orderSn;
             $order->user_id = Auth::user()->id;
-            $order->goods_id = $goods_id;
+            $order->goods_id = $goods->id;
             $order->coupon_id = !empty($coupon) ? $coupon->id : 0;
             $order->origin_amount = $goods->price;
             $order->amount = $amount;
             $order->expire_at = date("Y-m-d H:i:s", strtotime("+" . $goods->days . " days"));
             $order->is_expire = 0;
-            $order->pay_way = 2;
+            $order->pay_way = $pay_way != 1 ? 2 : 1; // 1 - 余额；2 - 在线支付
             $order->status = 0;
             $order->save();
 
-            // 生成支付单
-            $yzy = new Yzy();
-            $result = $yzy->createQrCode($goods->name, $amount * 100, $orderSn);
-            if (isset($result['error_response'])) {
-                Log::error('【有赞云】创建二维码失败：' . $result['error_response']['msg']);
-
-                throw new \Exception($result['error_response']['msg']);
-            }
-
+            // 同时生成支付订单
             $payment = new Payment();
             $payment->sn = $sn;
             $payment->user_id = Auth::user()->id;
             $payment->oid = $order->oid;
             $payment->order_sn = $orderSn;
-            $payment->pay_way = 1;
+            $payment->pay_way = $pay_way;
             $payment->amount = $amount;
-            $payment->qr_id = $result['response']['qr_id'];
-            $payment->qr_url = $result['response']['qr_url'];
-            $payment->qr_code = $result['response']['qr_code'];
-            $payment->qr_local_url = $this->base64ImageSaver($result['response']['qr_code']);
             $payment->status = 0;
             $payment->save();
 
@@ -160,13 +148,28 @@ class PaymentController extends Controller
                     $coupon->save();
                 }
 
-                Helpers::addCouponLog($coupon->id, $goods_id, $order->oid, '在线支付使用');
+                Helpers::addCouponLog($coupon->id, $goods->id, $order->oid, '在线支付使用');
+            }
+
+            switch ($pay_way) {
+                case Payment::PAY_WAY_BALANCE:
+                    $this->prePayThoughBalance();
+                    break;
+                case Payment::PAY_WAY_YOUZAN:
+                    // 判断是否开启有赞云支付
+                    $this->prePayThoughYouZan($payment);
+                    break;
+                case Payment::PAY_WAY_EGHL:
+                    $this->prePayThoughEGHL($payment);
+                    break;
+                default:
+                    throw new InvalidArgumentException('不支持的支付通道，请检查选项');
             }
 
             DB::commit();
 
             return Response::json(['status' => 'success', 'data' => $sn, 'message' => '创建订单成功，正在转到付款页面，请稍后']);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
 
             Log::error('创建支付订单失败：' . $e->getMessage());
@@ -189,7 +192,7 @@ class PaymentController extends Controller
 
         $order = Order::query()->where('oid', $payment->oid)->first();
         if (!$order) {
-            \Session::flash('errorMsg', '订单不存在');
+            Session::flash('errorMsg', '订单不存在');
 
             return Response::view('payment/' . $sn);
         }
@@ -237,5 +240,42 @@ class PaymentController extends Controller
         $view['list'] = $query->orderBy('id', 'desc')->paginate(10);
 
         return Response::view('payment.callbackList', $view);
+    }
+
+    private function prePayThoughBalance()
+    {
+        // TODO consume account balance
+    }
+
+    /**
+     * @param Order $payment
+     * @throws Exception
+     */
+    private function prePayThoughYouZan(Payment $payment)
+    {
+        if (!self::$systemConfig['is_youzan']) {
+            throw new UnexpectedValueException('创建支付单失败：系统并未开启在线支付功能');
+        }
+
+        $yzy = new Yzy();
+        $result = $yzy->createQrCode($payment->order->goods->name, $payment->amount * 100, $payment->order_sn);
+        if (isset($result['error_response'])) {
+            Log::error('【有赞云】创建二维码失败：' . $result['error_response']['msg']);
+
+            throw new Exception($result['error_response']['msg']);
+        }
+
+        $payment->qr_id = $result['response']['qr_id'];
+        $payment->qr_url = $result['response']['qr_url'];
+        $payment->qr_code = $result['response']['qr_code'];
+        $payment->qr_local_url = $this->base64ImageSaver($result['response']['qr_code']);
+        $payment->save();
+    }
+
+    /*
+     * 后续步骤中请求 eGHL 以显示支付页面
+     */
+    private function prePayThoughEGHL(Payment $payment)
+    {
     }
 }

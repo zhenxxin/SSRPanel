@@ -1,5 +1,7 @@
 <?php
 
+use App\Providers\PaymentServiceProvider;
+
 return [
 
     /*
@@ -186,6 +188,7 @@ return [
         Mews\Purifier\PurifierServiceProvider::class,
         Rap2hpoutre\LaravelLogViewer\LaravelLogViewerServiceProvider::class,
 
+        PaymentServiceProvider::class,
     ],
 
     /*
@@ -237,6 +240,7 @@ return [
         'Agent'        => Jenssegers\Agent\Facades\Agent::class,
         'Purifier'     => Mews\Purifier\Facades\Purifier::class,
 
+        'EGHL' => \App\Facades\EGHL::class,
     ],
 
 ];

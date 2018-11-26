@@ -18,6 +18,10 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Payment extends Model
 {
+    const PAY_WAY_BALANCE = 1;
+    const PAY_WAY_YOUZAN = 2;
+    const PAY_WAY_EGHL = 3;
+
     protected $table = 'payment';
 
     public function user()
@@ -30,7 +34,7 @@ class Payment extends Model
         return $this->belongsTo(Order::class, 'oid', 'oid');
     }
 
-    function getAmountAttribute($value)
+    public function getAmountAttribute($value)
     {
         return $value / 100;
     }
