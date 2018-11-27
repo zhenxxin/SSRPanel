@@ -20,6 +20,11 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Order extends Model
 {
+    const STATUS_PROCESSING = 0;
+    const STATUS_PENDING = 1;
+    const STATUS_SUCCESS = 2;
+    const STATUS_FAILED = -1;
+
     protected $table = 'order';
     protected $primaryKey = 'oid';
 
@@ -53,12 +58,12 @@ class Order extends Model
         return $this->attributes['origin_amount'] = $value * 100;
     }
 
-    function getAmountAttribute($value)
+    public function getAmountAttribute($value)
     {
         return $value / 100;
     }
 
-    function setAmountAttribute($value)
+    public function setAmountAttribute($value)
     {
         return $this->attributes['amount'] = $value * 100;
     }

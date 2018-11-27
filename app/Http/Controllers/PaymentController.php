@@ -138,7 +138,7 @@ class PaymentController extends Controller
             $payment->order_sn = $orderSn;
             $payment->pay_way = $pay_way;
             $payment->amount = $amount;
-            $payment->status = 0;
+            $payment->status = Payment::STATUS_NEW;
             $payment->save();
 
             // 优惠券置为已使用
@@ -216,11 +216,15 @@ class PaymentController extends Controller
 
         $payment = Payment::query()->where('sn', $sn)->where('user_id', Auth::user()->id)->first();
         if (!$payment) {
-            return Response::json(['status' => 'error', 'data' => '', 'message' => '支付失败']);
-        } elseif ($payment->status > 0) {
+            return Response::json(['status' => 'error', 'data' => '', 'message' => '支付订单不存在']);
+        } elseif (Payment::STATUS_SUCCESS == $payment->status) {
             return Response::json(['status' => 'success', 'data' => '', 'message' => '支付成功']);
-        } elseif ($payment->status < 0) {
-            return Response::json(['status' => 'error', 'data' => '', 'message' => '订单超时未支付，已自动关闭']);
+        } elseif (Payment::STATUS_FAILED == $payment->status) {
+            return Response::json(['status' => 'error', 'data' => '', 'message' => '支付失败']);
+        } elseif (Payment::STATUS_PROCESSING == $payment->status) {
+            return Response::json(['status' => 'fail', 'data' => '', 'message' => '等待支付']);
+        } elseif (Payment::STATUS_REFUNDED == $payment->status) {
+            return Response::json(['status' => 'error', 'data' => '', 'message' => '已取消']);
         } else {
             return Response::json(['status' => 'fail', 'data' => '', 'message' => '等待支付']);
         }

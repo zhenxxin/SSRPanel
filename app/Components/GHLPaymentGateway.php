@@ -28,6 +28,13 @@ class GHLPaymentGateway
     protected $PageTimeout = null;
     protected $MerchantTermsURL = null;
 
+    protected $TxnID = null;
+    protected $TxnStatus = null;
+    protected $AuthCode = null;
+    protected $Param6 = null;
+    protected $Param7 = null;
+    protected $HashValue2 = null;
+
     // Define all hash value components specifiying if they are mandatory or not
     private $hash_components = array(    //Param => is_mandatory
         'ServiceID' => true,
@@ -38,6 +45,20 @@ class GHLPaymentGateway
         'CurrencyCode' => true,
         'CustIP' => true,
         'PageTimeout' => false
+    );
+
+    // 计算 HashValue2 的参数
+    private $response_hash_components = array(
+        'TxnID' => true,
+        'ServiceID' => true,
+        'PaymentID' => true,
+        'TxnStatus' => true,
+        'Amount' => true,
+        'CurrencyCode' => true,
+        'AuthCode' => false,
+        'OrderNumber' => true,
+        'Param6' => false,
+        'Param7' => false,
     );
 
     // Define all post params specifiying if they are mandatory or not
@@ -99,6 +120,19 @@ class GHLPaymentGateway
         }
     }
 
+    public function getResponseValuesFromRequest()
+    {
+        $exempted_attr = array('URL', 'hash_components', 'response_hash_components', 'post_args');
+        $args = get_object_vars($this);
+        foreach ($args as $ind => $val) {
+            if (!in_array($ind, $exempted_attr)) {
+                if (isset($_REQUEST[$ind])) {
+                    $this->$ind = $_REQUEST[$ind];
+                }
+            }
+        }
+    }
+
     /* 	calculate hashing (HashValue)
         must pass the merchant password as argument to this function
     */
@@ -117,6 +151,37 @@ class GHLPaymentGateway
         } else {
             return false;
         }
+    }
+
+    public function calcResponseHash($mPassword = null)
+    {
+        if (is_null($mPassword)) {
+            return false;
+        }
+
+        $hashStr2 = $hashStr = $mPassword;
+        if ($this->checkResponseHashComponents()) {
+            foreach ($this->response_hash_components as $component => $is_mandatory) {
+                if (!in_array($component, array('OrderNumber', 'Param6', 'Param7'))) {
+                    $hashStr .= $this->$component;
+                }
+                $hashStr2 .= $this->$component;
+            }
+            $this->HashValue = hash('sha256', $hashStr);
+            $this->HashValue2 = hash('sha256', $hashStr2);
+            return $this->HashValue2; // 返回 HashValue2 作为验证
+        } else {
+            return false;
+        }
+    }
+
+    public function verifyRequest($mPassword)
+    {
+        $this->getResponseValuesFromRequest();
+        $originHashValue = $this->get('HashValue2'); // 也可以使用 HashValue
+        $hashValue = $this->calcResponseHash($mPassword);
+
+        return $hashValue === $originHashValue;
     }
 
     public function getUrl()
@@ -192,6 +257,17 @@ class GHLPaymentGateway
         foreach ($this->hash_components as $component => $is_mandatory) {
             if (is_null($this->$component) && $is_mandatory) {
                 echo 'A mandatory hash component "' . $component . '" is missing...<br/>';
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private function checkResponseHashComponents()
+    {
+        foreach ($this->response_hash_components as $component => $is_mandatory) {
+            if (is_null($this->$component) && $is_mandatory) {
+                echo 'A mandatory response hash component "' . $component . '" is missing...<br/>';
                 return false;
             }
         }

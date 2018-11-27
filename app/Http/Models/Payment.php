@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Model;
  * 支付单
  * Class Payment
  *
+ * @property Order $order
+ * @property User $user
+ *
  * @package App\Http\Models
  * @property mixed $amount
  * @property-read mixed $pay_way_label
@@ -21,6 +24,12 @@ class Payment extends Model
     const PAY_WAY_BALANCE = 1;
     const PAY_WAY_YOUZAN = 2;
     const PAY_WAY_EGHL = 3;
+
+    const STATUS_PROCESSING = 0;
+    const STATUS_SUCCESS = 1;
+    const STATUS_NEW = 2;
+    const STATUS_REFUNDED = 3;
+    const STATUS_FAILED = -1;
 
     protected $table = 'payment';
 
@@ -39,7 +48,7 @@ class Payment extends Model
         return $value / 100;
     }
 
-    function setAmountAttribute($value)
+    public function setAmountAttribute($value)
     {
         return $this->attributes['amount'] = $value * 100;
     }
@@ -48,13 +57,17 @@ class Payment extends Model
     public function getStatusLabelAttribute()
     {
         switch ($this->attributes['status']) {
-            case -1:
+            case self::STATUS_FAILED:
                 $status_label = '支付失败';
                 break;
-            case 1:
+            case self::STATUS_SUCCESS:
                 $status_label = '支付成功';
                 break;
-            case 0:
+            case self::STATUS_REFUNDED:
+                $status_label = '已取消';
+                break;
+            case self::STATUS_NEW:
+            case self::STATUS_PROCESSING:
             default:
                 $status_label = '等待支付';
                 break;
