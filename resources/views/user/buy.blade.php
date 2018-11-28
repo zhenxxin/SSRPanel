@@ -80,9 +80,11 @@
                     <div class="col-xs-2">
                         <select class="form-control" name="pay_way" id="pay_way">
                             <option value="0" selected ="selected">请选择</option>
+                            @if ($goods->type != 3)
                             <option value="1">余额支付</option>
+                            @endif
                             <option value="2">有赞（二维码支付）</option>
-                            <option value="3">eGHL</option>
+                            <option value="3">GHL ePayments</option>
                         </select>
                     </div>
                 </div>

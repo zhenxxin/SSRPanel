@@ -8,9 +8,6 @@ use Illuminate\Database\Eloquent\Model;
  * 支付单
  * Class Payment
  *
- * @property Order $order
- * @property User $user
- *
  * @package App\Http\Models
  * @property mixed $amount
  * @property-read mixed $pay_way_label
@@ -43,12 +40,12 @@ class Payment extends Model
         return $this->belongsTo(Order::class, 'oid', 'oid');
     }
 
-    public function getAmountAttribute($value)
+    function getAmountAttribute($value)
     {
         return $value / 100;
     }
 
-    public function setAmountAttribute($value)
+    function setAmountAttribute($value)
     {
         return $this->attributes['amount'] = $value * 100;
     }

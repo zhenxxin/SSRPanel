@@ -38,12 +38,12 @@ class User extends Authenticatable
         return $this->hasOne(User::class, 'id', 'referral_uid');
     }
 
-    public function getBalanceAttribute($value)
+    function getBalanceAttribute($value)
     {
         return $value / 100;
     }
 
-    public function setBalanceAttribute($value)
+    function setBalanceAttribute($value)
     {
         return $this->attributes['balance'] = $value * 100;
     }

@@ -103,6 +103,10 @@ class GHLPaymentGateway
     // Method to set the value of protected/private variable of this class
     public function set($attr, $value)
     {
+        if (in_array($attr, array('Amount'))) {
+            $this->$attr = static::getFormattedCurrency($value);
+        }
+
         $this->$attr = $value;
     }
 
@@ -131,6 +135,24 @@ class GHLPaymentGateway
                 }
             }
         }
+    }
+
+    public function getResponseValuesFromParams($params)
+    {
+        $exempted_attr = array('URL', 'hash_components', 'response_hash_components', 'post_args');
+        $args = get_object_vars($this);
+        foreach ($args as $ind => $val) {
+            if (!in_array($ind, $exempted_attr)) {
+                if (isset($params[$ind])) {
+                    $this->$ind = $params[$ind];
+                }
+            }
+        }
+    }
+
+    public function getFormattedCurrency($amount)
+    {
+        return number_format($amount, 2, '.', '');
     }
 
     /* 	calculate hashing (HashValue)
@@ -180,6 +202,17 @@ class GHLPaymentGateway
         $this->getResponseValuesFromRequest();
         $originHashValue = $this->get('HashValue2'); // 也可以使用 HashValue
         $hashValue = $this->calcResponseHash($mPassword);
+        //\Log::info("origin: ${originHashValue}, calc: ${hashValue}");
+
+        return $hashValue === $originHashValue;
+    }
+
+    public function verifyRequestFromParams($mPassword, $params)
+    {
+        $this->getResponseValuesFromParams($params);
+        $originHashValue = $this->get('HashValue2'); // 也可以使用 HashValue
+        $hashValue = $this->calcResponseHash($mPassword);
+        //\Log::info("origin: ${originHashValue}, calc: ${hashValue}");
 
         return $hashValue === $originHashValue;
     }

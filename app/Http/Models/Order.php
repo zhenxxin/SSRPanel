@@ -58,12 +58,12 @@ class Order extends Model
         return $this->attributes['origin_amount'] = $value * 100;
     }
 
-    public function getAmountAttribute($value)
+    function getAmountAttribute($value)
     {
         return $value / 100;
     }
 
-    public function setAmountAttribute($value)
+    function setAmountAttribute($value)
     {
         return $this->attributes['amount'] = $value * 100;
     }

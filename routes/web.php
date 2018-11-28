@@ -134,5 +134,6 @@ Route::group(['middleware' => ['isForbidden', 'isLogin']], function () {
     // 处于安全考虑，创建订单后，再请求一次后端，标记 payment 状态，然后跳转
     Route::post('payment-eghl/create/{sn}', 'PaymentEGHLController@create');
     // 对方系统可能会用 GET 和 POST 回来
+    Route::any('payment-eghl/redirect/{sn}', 'PaymentEGHLController@redirect');
     Route::any('payment-eghl/callback/{sn}', 'PaymentEGHLController@callback');
 });
