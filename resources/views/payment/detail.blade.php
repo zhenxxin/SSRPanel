@@ -7,12 +7,18 @@
         <!-- BEGIN PAGE BASE CONTENT -->
         <div class="portlet light bordered">
             <div class="portlet-body">
+                @if (Session::get('errorMsg'))
+                <div class="alert alert-danger">
+                    <button class="close" data-close="alert"></button>
+                    <span> {!! Session::get('errorMsg') !!} </span>
+                </div>
+                @endif
                 <div class="alert alert-info" style="text-align: center;">
                     @if (1 == $payment->pay_way)
                     @elseif (2 == $payment->pay_way)
                     请使用<strong style="color:red;">支付宝、QQ、微信</strong>扫描如下二维码
                     @elseif (3 == $payment->pay_way)
-                    请准备好您的信用卡信息，并输入<strong style="color: red;">姓名，手机号码，邮箱</strong>，然后点击支付按钮将跳转到 <strong>GHL ePayment</strong> 进行支付';
+                    请准备好您的信用卡信息，并输入<strong style="color: red;">姓名，手机号码，邮箱</strong>，然后点击支付按钮将跳转到 <strong>GHL Payment Gateway</strong> 进行支付
                     @endif
                 </div>
                 <div class="row" style="text-align: center; font-size: 1.05em;">

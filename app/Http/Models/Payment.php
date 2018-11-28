@@ -18,8 +18,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Payment extends Model
 {
-    const PAY_WAY_BALANCE = 1;
-    const PAY_WAY_YOUZAN = 2;
+    const PAY_WAY_YZ_WEIXIN = 1;
+    const PAY_WAY_YZ_ALIPAY = 2;
     const PAY_WAY_EGHL = 3;
 
     const STATUS_PROCESSING = 0;
@@ -76,13 +76,19 @@ class Payment extends Model
     // 支付方式
     public function getPayWayLabelAttribute()
     {
+        if ($this->pay_way)
         switch ($this->attributes['pay_way']) {
-            case 1:
+            case self::PAY_WAY_YZ_WEIXIN:
                 $pay_way_label = '微信';
                 break;
-            case 2:
-            default:
+            case self::PAY_WAY_YZ_ALIPAY:
                 $pay_way_label = '支付宝';
+                break;
+            case self::PAY_WAY_EGHL:
+                $pay_way_label = 'GHL Payment Gateway';
+                break;
+            default:
+                $pay_way_label = '在线支付';
                 break;
         }
 

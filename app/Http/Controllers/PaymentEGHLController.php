@@ -10,6 +10,7 @@ use DB;
 use Exception;
 use Illuminate\Http\Request;
 use Log;
+use Redirect;
 use Session;
 use URL;
 
@@ -26,33 +27,32 @@ class PaymentEGHLController extends Controller
 
     public function create(Request $request, $sn)
     {
-        $returnUrl = URL::previous();
         $custName = $request->get('cust_name');
         $custEmail = $request->get('cust_email');
         $custPhone = $request->get('cust_phone');
         if (is_null($custName)) {
             Session::flash('errorMsg', '用户名不能为空');
-            return redirect($returnUrl);
+            return Redirect::back()->withInput();
         }
         if (is_null($custEmail)) {
             Session::flash('errorMsg', '邮箱不能为空');
-            return redirect($returnUrl);
+            return Redirect::back()->withInput();
         }
         if (is_null($custPhone)) {
             Session::flash('errorMsg', '手机号码不能为空');
-            return redirect($returnUrl);
+            return Redirect::back()->withInput();
         }
 
         /** @var Payment $payment */
         $payment = Payment::query()->where(['sn' => $sn])->firstOrFail();
         if (Payment::STATUS_NEW != $payment->status) {
             Session::flash('errorMsg', '支付订单状态不正确');
-            return redirect($returnUrl);
+            return Redirect::back()->withInput();
         }
 
         if (Payment::PAY_WAY_EGHL != $payment->pay_way) {
             Session::flash('errorMsg', '支付通道不被支持');
-            return redirect($returnUrl);
+            return Redirect::back()->withInput();
         }
 
         $params = [

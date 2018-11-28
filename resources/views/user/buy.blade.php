@@ -84,7 +84,7 @@
                             <option value="1">余额支付</option>
                             @endif
                             <option value="2">有赞（二维码支付）</option>
-                            <option value="3">GHL ePayments</option>
+                            <option value="3">GHL Payment Gateway</option>
                         </select>
                     </div>
                 </div>
