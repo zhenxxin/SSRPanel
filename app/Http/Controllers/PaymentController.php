@@ -152,10 +152,10 @@ class PaymentController extends Controller
             }
 
             switch ($pay_way) {
-                case Payment::PAY_WAY_BALANCE:
+                case Payment::PAY_WAY_YZ_WEIXIN:
                     $this->prePayThoughBalance();
                     break;
-                case Payment::PAY_WAY_YOUZAN:
+                case Payment::PAY_WAY_YZ_ALIPAY:
                     // 判断是否开启有赞云支付
                     $this->prePayThoughYouZan($payment);
                     break;
